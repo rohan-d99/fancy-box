@@ -1,60 +1,80 @@
 "use client";
-import { MouseEvent, useRef, useState } from "react";
+import { SliderActionKinds } from "@/components/types";
+import {
+  MouseEvent as ReactMouseEvent,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 interface SliderProps {
-  label: string;
-  minValue: number;
-  maxValue: number;
+  minValue?: number;
+  maxValue?: number;
   value: number;
-  onChange: () => void;
+  updateValue: (type: SliderActionKinds, value: number) => void;
+  type: SliderActionKinds;
 }
 
 const Slider = ({
-  label,
-  maxValue = 300,
-  minValue = 0,
+  minValue = -50,
+  maxValue = 50,
   value = 0,
-}: Partial<SliderProps>) => {
-  const [position, setPosition] = useState(value);
-  const [isDragging, setIsDragging] = useState(false);
+  updateValue,
+  type,
+}: SliderProps) => {
+  const [thumbPosition, setThumbPosition] = useState(50);
+  const sliderRef = useRef<HTMLDivElement | null>(null);
   const thumbRef = useRef<HTMLDivElement | null>(null);
-  const trackRef = useRef<HTMLDivElement | null>(null);
 
   const handleMouseMove = (event: MouseEvent) => {
-    if (!isDragging) return;
-
-    const rect = (event.target as HTMLElement).getBoundingClientRect();
-    const offsetX = Math.round(event.clientX - rect.left);
-
-    if (offsetX >= minValue && offsetX <= maxValue) {
-      setPosition(offsetX);
+    const rect = sliderRef.current?.getBoundingClientRect();
+    if (rect) {
+      const newPosition = Math.min(
+        Math.max(0, event.clientX - rect.left),
+        rect.width
+      );
+      const newValue = Math.round(
+        (newPosition / rect.width) * (maxValue - minValue) + minValue
+      );
+      updateValue(type, newValue);
     }
-
-    console.log("offsetX", offsetX);
   };
 
-  const handleMouseDown = (event: MouseEvent<HTMLDivElement>) => {
-    setIsDragging(true);
-    // document.addEventListener("mousemove", (e) => handleMouseMove(e));
+  const handleMouseUp = () => {
+    document.removeEventListener("mousemove", handleMouseMove);
+    document.removeEventListener("mousedown", handleMouseDown);
   };
 
-  const handleMouseUp = (event: MouseEvent<HTMLDivElement>) => {
-    setIsDragging(false);
+  const handleMouseDown = () => {
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
   };
+
+  useEffect(() => {
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    const constrainedValue = Math.max(minValue, Math.min(value, maxValue));
+    const position =
+      ((constrainedValue - minValue) / (maxValue - minValue)) * 100;
+    setThumbPosition(Math.min(position, 100));
+  }, [value, minValue, maxValue]);
 
   return (
-    <div>
+    <div
+      ref={sliderRef}
+      onMouseDown={handleMouseDown}
+      className="w-[300px] h-2 bg-blue-100 rounded-full"
+    >
       <div
-        className="relative w-[300px] h-2 bg-blue-100 rounded full"
-        ref={trackRef}
-        // onMouseDown={(event) => }
-      >
-        <div
-          ref={thumbRef}
-          style={{ left: `${position}px` }}
-          className={`absolute -translate-x-1/2 -translate-y-2 w-6 h-6 rounded-full border border-blue-600 bg-white opacity-20 cursor-pointer`}
-        />
-      </div>
+        ref={thumbRef}
+        className={`relative w-[22px] h-[22px] rounded-full border-2 transition border-blue-500 bg-white active:shadow-md active:cursor-ew-resize cursor-pointer -translate-y-2 -translate-x-1/2`}
+        style={{ left: `${thumbPosition}%` }}
+      />
     </div>
   );
 };
