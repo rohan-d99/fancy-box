@@ -12,13 +12,12 @@ import {
   SliderActionKinds,
 } from "@/components/types";
 import CSSCodeBlock from "../codeBlock/CSSCodeBlock";
+import MotionDivWrapper from "../motionDivWrapper/MotionDivWrapper";
 
 interface BoxBarProps {
   state: BoxShadow;
   dispatch: Dispatch<BoxShadowAction>;
 }
-
-// TODO: make a component for color picker
 
 const BoxBar = ({ state, dispatch }: BoxBarProps) => {
   const [isOuterBoxColorPickerOpen, setIsOuterBoxColorPickerOpen] =
@@ -132,9 +131,14 @@ const BoxBar = ({ state, dispatch }: BoxBarProps) => {
           />
         </div>
       </div>
-      <div className="mt-10">
+      <MotionDivWrapper
+        initial={{ y: 30, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ ease: "easeIn", duration: 0.2, delay: 1 }}
+        className="mt-10"
+      >
         <CSSCodeBlock boxShadow={state} />
-      </div>
+      </MotionDivWrapper>
     </Sidebar>
   );
 };

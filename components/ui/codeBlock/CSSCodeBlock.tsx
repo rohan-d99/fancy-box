@@ -1,7 +1,7 @@
 import React, { HTMLAttributes, useEffect, useState } from "react";
 import Label from "../label/Label";
 import { BoxShadow } from "@/components/types";
-import { Check, Copy } from "phosphor-react";
+import CopySnippet from "../copyCta/CopySnippet";
 
 interface CSSCodeBlockProps extends HTMLAttributes<HTMLLabelElement> {
   boxShadow: BoxShadow;
@@ -9,7 +9,6 @@ interface CSSCodeBlockProps extends HTMLAttributes<HTMLLabelElement> {
 
 const CSSCodeBlock = ({ className, boxShadow }: CSSCodeBlockProps) => {
   const [cssSnippet, setCssSnippet] = useState<string[]>([]);
-  const [isSnippetCopied, setIsSnippetCopied] = useState(false);
 
   useEffect(() => {
     const {
@@ -22,34 +21,14 @@ const CSSCodeBlock = ({ className, boxShadow }: CSSCodeBlockProps) => {
     } = boxShadow;
     const snippet = `
       box-shadow: ${
-        inset ? "inset" : ""
-      } ${horizontalOffset}px ${verticalOffset}px ${blur}px ${spread}px ${shadowColor};`;
-    const webkitSnippet = `-webkit-${snippet}`;
-    const mozSnippet = `-moz-${snippet}`;
+        inset ? "inset " : ""
+      }${horizontalOffset}px ${verticalOffset}px ${blur}px ${spread}px ${shadowColor};`;
+
+    const webkitSnippet = `-webkit-${snippet.trim()}`;
+    const mozSnippet = `-moz-${snippet.trim()}`;
 
     setCssSnippet([snippet, webkitSnippet, mozSnippet]);
   }, [boxShadow]);
-
-  useEffect(() => {
-    if (isSnippetCopied) {
-      setTimeout(() => {
-        setIsSnippetCopied(false);
-      }, 2000);
-    }
-  }, [isSnippetCopied]);
-
-  const copySnippet = async () => {
-    if (isSnippetCopied) {
-      return;
-    } else {
-      try {
-        await navigator.clipboard.writeText(cssSnippet.join(" "));
-        setIsSnippetCopied(true);
-      } catch (error) {
-        console.error("Failed to copy: ", error);
-      }
-    }
-  };
 
   return (
     <div
@@ -69,24 +48,12 @@ const CSSCodeBlock = ({ className, boxShadow }: CSSCodeBlockProps) => {
           </p>
         ))}
       </div>
-
-      <button
+      <CopySnippet
+        iconColor="white"
+        copyString={cssSnippet.join("\n")}
+        textClassname="text-white text-lg font-bold"
         className="w-full flex items-center justify-center gap-2 bg-blue-500 py-3 rounded-lg hover:bg-blue-600 transition-all disabled:bg-gray-400 disabled:cursor-not-allowed"
-        onClick={copySnippet}
-        disabled={cssSnippet.length === 0}
-      >
-        {isSnippetCopied ? (
-          <>
-            <Check color="white" size={24} weight="bold" />
-            <span className="text-white text-lg font-bold">Copied!</span>
-          </>
-        ) : (
-          <>
-            <Copy color="white" size={24} weight="fill" />
-            <span className="text-white text-lg font-bold">Copy</span>
-          </>
-        )}
-      </button>
+      />
     </div>
   );
 };
