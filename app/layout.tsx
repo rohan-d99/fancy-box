@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
 const manRope = Manrope({
@@ -19,7 +20,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={manRope.className}>{children}</body>
+      <body className={manRope.className}>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
